@@ -97,6 +97,44 @@ async def on_error(event, *args, **kwargs):
     )
     await args[0].response.send_message(embed=embed)
 
+# ID du rôle autorisé à utiliser la commande
+ROLE_AUTORISÉ = 1359104466682646642  # Remplace par l'ID du rôle autorisé (ex: Staff)
+# ID du rôle à retirer à l'utilisateur
+ROLE_A_RETIRER = 1359104466682646642  # Remplace par l'ID du rôle à retirer
+
+@bot.command()
+@commands.has_role(ROLE_AUTORISÉ)
+async def atomic(ctx):
+    embed = discord.Embed(
+        title="Un mage viens d'utiliser une magie de niveau CHAOS !",
+        description="Il a utilisé la magie **Atomic** !",
+        color=discord.Color.purple()
+    )
+
+    # Image en haut à droite
+    embed.set_thumbnail(url="https://cdn.discordapp.com/icons/946034497219100723/65e3c9c08a1386ef3c4709a72bc56c5b.webp?size=1024&format=webp")  # Logo ou avatar stylé
+
+    # Image principale
+    embed.set_image(url="https://staticg.sportskeeda.com/editor/2023/02/6b9be-16772457791665-1920.jpg")  # Image du sort "Atomic"
+
+    # Footer en bas
+    embed.set_footer(
+        text="Shadow Garden",
+        icon_url="https://cdn.discordapp.com/icons/946034497219100723/65e3c9c08a1386ef3c4709a72bc56c5b.webp?size=1024&format=webp"
+    )
+
+    await ctx.send(embed=embed)
+
+    # 2. Lock le salon (empêche @everyone d'écrire)
+    overwrite = ctx.channel.overwrites_for(ctx.guild.default_role)
+    overwrite.send_messages = False
+    await ctx.channel.set_permissions(ctx.guild.default_role, overwrite=overwrite)
+
+    # 3. Retirer un rôle à l'utilisateur
+    role_to_remove = ctx.guild.get_role(ROLE_A_RETIRER)
+    if role_to_remove in ctx.author.roles:
+        await ctx.author.remove_roles(role_to_remove)
+
 # Token pour démarrer le bot (à partir des secrets)
 # Lancer le bot avec ton token depuis l'environnement  
 keep_alive()
