@@ -98,42 +98,61 @@ async def on_error(event, *args, **kwargs):
     await args[0].response.send_message(embed=embed)
 
 # ID du rôle autorisé à utiliser la commande
-ROLE_AUTORISÉ = 1359104466682646642  # Remplace par l'ID du rôle autorisé (ex: Staff)
+ROLE_AUTORISÉ = 1359104466682646642
+
 # ID du rôle à retirer à l'utilisateur
-ROLE_A_RETIRER = 1359104466682646642  # Remplace par l'ID du rôle à retirer
+ROLE_A_RETIRER = 1359104466682646642
+
+# ID du rôle à ajouter au membre mentionné
+ROLE_A_AJOUTER = 1359104403587600464  # Remplace par le vrai ID
+
+# ID du salon où envoyer un message supplémentaire
+SALON_LOG_ID = 1359274996211646514  # Remplace par l’ID du salon de logs/RP
+
 
 @bot.command()
 @commands.has_role(ROLE_AUTORISÉ)
-async def atomic(ctx):
+async def atomic(ctx, membre: discord.Member):
+    await ctx.message.delete()  # Supprimer la commande
+
+    # Création de l'embed
     embed = discord.Embed(
-        title="Un mage viens d'utiliser une magie de niveau CHAOS !",
-        description="Il a utilisé la magie **Atomic** !",
+        title="Un mage vient d'utiliser une magie de niveau CHAOS !",
+        description=f"**{ctx.author.mention}** a utilisé la magie interdite **Atomic** sur {membre.mention} !",
         color=discord.Color.purple()
     )
-
-    # Image en haut à droite
-    embed.set_thumbnail(url="https://cdn.discordapp.com/icons/946034497219100723/65e3c9c08a1386ef3c4709a72bc56c5b.webp?size=1024&format=webp")  # Logo ou avatar stylé
-
-    # Image principale
-    embed.set_image(url="https://staticg.sportskeeda.com/editor/2023/02/6b9be-16772457791665-1920.jpg")  # Image du sort "Atomic"
-
-    # Footer en bas
+    embed.set_thumbnail(url="https://cdn.discordapp.com/icons/946034497219100723/65e3c9c08a1386ef3c4709a72bc56c5b.webp?size=1024&format=webp")
+    embed.set_image(url="https://staticg.sportskeeda.com/editor/2023/02/6b9be-16772457791665-1920.jpg")
     embed.set_footer(
         text="Shadow Garden",
         icon_url="https://cdn.discordapp.com/icons/946034497219100723/65e3c9c08a1386ef3c4709a72bc56c5b.webp?size=1024&format=webp"
     )
 
+    # Envoie de l'embed dans le salon actuel
     await ctx.send(embed=embed)
 
-    # 2. Lock le salon (empêche @everyone d'écrire)
-    overwrite = ctx.channel.overwrites_for(ctx.guild.default_role)
-    overwrite.send_messages = False
-    await ctx.channel.set_permissions(ctx.guild.default_role, overwrite=overwrite)
+    # Envoi d’un message dans un autre salon
+    salon_logs = ctx.guild.get_channel(SALON_LOG_ID)
+    if salon_logs:
+        await salon_logs.send(f"📜 **{ctx.author.display_name}** a invoqué la magie *Atomic* sur {membre.display_name}. Le destin vient d’être scellé.")
+    else:
+        await ctx.send("⚠️ Salon de logs introuvable.")
 
-    # 3. Retirer un rôle à l'utilisateur
+    # Retirer le rôle de l’auteur
     role_to_remove = ctx.guild.get_role(ROLE_A_RETIRER)
-    if role_to_remove in ctx.author.roles:
+    if role_to_remove and role_to_remove in ctx.author.roles:
         await ctx.author.remove_roles(role_to_remove)
+        await ctx.send(f"{ctx.author.mention} a perdu le rôle **{role_to_remove.name}**.")
+
+    # Ajouter un rôle au membre ciblé
+    role_to_add = ctx.guild.get_role(ROLE_A_AJOUTER)
+    if role_to_add:
+        await membre.add_roles(role_to_add)
+        await ctx.send(f"{membre.mention} a reçu le rôle **{role_to_add.name}**.")
+    else:
+        await ctx.send("⚠️ Le rôle à ajouter est introuvable.")
+
+
 
 # Token pour démarrer le bot (à partir des secrets)
 # Lancer le bot avec ton token depuis l'environnement  
