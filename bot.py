@@ -134,7 +134,8 @@ async def atomic(ctx, membre: discord.Member):
     # Envoi d’un message dans un autre salon
     salon_logs = ctx.guild.get_channel(SALON_LOG_ID)
     if salon_logs:
-        await salon_logs.send(f"📜 **{ctx.author.display_name}** a invoqué la magie *Atomic* sur {membre.display_name}. Le destin vient d’être scellé.")
+        await salon_logs.send(f"📜 **{ctx.author.display_name}** a invoqué la magie *Atomic* sur {membre.mention}. Le destin vient d’être scellé.
+        Il faut lui supprimer son inventaire !")
     else:
         await ctx.send("⚠️ Salon de logs introuvable.")
 
@@ -142,13 +143,11 @@ async def atomic(ctx, membre: discord.Member):
     role_to_remove = ctx.guild.get_role(ROLE_A_RETIRER)
     if role_to_remove and role_to_remove in ctx.author.roles:
         await ctx.author.remove_roles(role_to_remove)
-        await ctx.send(f"{ctx.author.mention} a perdu le rôle **{role_to_remove.name}**.")
 
     # Ajouter un rôle au membre ciblé
     role_to_add = ctx.guild.get_role(ROLE_A_AJOUTER)
     if role_to_add:
         await membre.add_roles(role_to_add)
-        await ctx.send(f"{membre.mention} a reçu le rôle **{role_to_add.name}**.")
     else:
         await ctx.send("⚠️ Le rôle à ajouter est introuvable.")
 
