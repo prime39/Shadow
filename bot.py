@@ -134,8 +134,8 @@ async def atomic(ctx, membre: discord.Member):
     # Envoi d’un message dans un autre salon
     salon_logs = ctx.guild.get_channel(SALON_LOG_ID)
     if salon_logs:
-        await salon_logs.send(f"📜 **{ctx.author.display_name}** a invoqué la magie *Atomic* sur {membre.mention}. Le destin vient d’être scellé.
-        Il faut lui supprimer son inventaire !")
+        await salon_logs.send(f"📜 **{ctx.author.display_name}** a invoqué la magie *Atomic* sur {membre.mention}. Le destin vient d’être scellé. Il faut lui supprimer son inventaire !")
+
     else:
         await ctx.send("⚠️ Salon de logs introuvable.")
 
