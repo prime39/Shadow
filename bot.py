@@ -46,8 +46,8 @@ async def on_ready():
     
     # Liste des activités dynamiques
     activity_types = [
-        discord.Activity(type=discord.ActivityType.watching, name=f"{member_count} Membres"),
-        discord.Activity(type=discord.ActivityType.streaming, name=f"{guild_count} Serveurs"),
+        discord.Activity(type=discord.ActivityType.watching, name="La lune de sang 🌕!"),
+        discord.Activity(type=discord.ActivityType.streaming, name="L'Autre Monde 🪐"),
         discord.Activity(type=discord.ActivityType.streaming, name="Shadow Garden"),
     ]
     
