@@ -109,10 +109,6 @@ ROLE_A_AJOUTER = 1359104403587600464  # Remplace par le vrai ID
 # ID du salon où envoyer un message supplémentaire
 SALON_LOG_ID = 1359274996211646514  # Remplace par l’ID du salon de logs/RP
 
-# ID du rôle à pinger dans le salon de logs
-ROLE_LOG_PING = 1087764830531883019  # Remplace par l'ID du rôle à mentionner
-
-
 @bot.command()
 @commands.has_role(ROLE_AUTORISÉ)
 async def atomic(ctx, membre: discord.Member):
@@ -131,19 +127,15 @@ async def atomic(ctx, membre: discord.Member):
         icon_url="https://cdn.discordapp.com/icons/946034497219100723/65e3c9c08a1386ef3c4709a72bc56c5b.webp?size=1024&format=webp"
     )
 
-    # Envoie de l'embed dans le salon actuel
+      # Envoie de l'embed dans le salon actuel
     await ctx.send(embed=embed)
 
-    # Envoi d’un message dans un autre salon avec ping du rôle
+    # Envoi d’un message dans un autre salon
     salon_logs = ctx.guild.get_channel(SALON_LOG_ID)
-    role_ping = ctx.guild.get_role(ROLE_LOG_PING)
-
-    if salon_logs and role_ping:
-        await salon_logs.send(f"""{role_ping.mention} 📜 **{ctx.author.display_name}** a invoqué la magie **Atomic de Niveau Chaos** sur {membre.mention}.""")
+    if salon_logs:
+        await salon_logs.send(f"📜 **{ctx.author.display_name}** a invoqué la magie *Atomic* sur {membre.display_name}. Le destin vient d’être scellé.")
     else:
-        await ctx.send("⚠️ Le salon de logs ou le rôle à ping est introuvable.")
-
-
+        await ctx.send("⚠️ Salon de logs introuvable.")
 
     # Retirer le rôle de l’auteur
     role_to_remove = ctx.guild.get_role(ROLE_A_RETIRER)
