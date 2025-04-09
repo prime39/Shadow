@@ -139,7 +139,10 @@ salon_logs = ctx.guild.get_channel(SALON_LOG_ID)
 role_ping = ctx.guild.get_role(ROLE_LOG_PING)
 
 if salon_logs and role_ping:
-    await salon_logs.send(f"{role_ping.mention} 📜 **{ctx.author.display_name}** a invoqué la magie *Atomic* sur {membre.mention}.\n"f"Il faut lui supprimer son inventaire au plus vite et screen ce qu'il a dedans !")
+    await salon_logs.send(
+    f"""{role_ping.mention} 📜 **{ctx.author.display_name}** a invoqué la magie *Atomic* sur {membre.mention}.
+Il faut lui supprimer son inventaire au plus vite et screen ce qu'il a dedans !"""
+)
 else:
     await ctx.send("⚠️ Le salon de logs ou le rôle à ping est introuvable.")
 
