@@ -23,7 +23,7 @@ token = os.environ['SHADOW']
 intents = discord.Intents.all()
 start_time = time.time()
 client = discord.Client(intents=intents)
-bot = commands.Bot(command_prefix="!!", intents=intents, help_command=None)
+bot = commands.Bot(command_prefix="-", intents=intents, help_command=None)
 
 @bot.event
 async def on_ready():
@@ -229,8 +229,6 @@ async def futur(ctx):
      # Envoie l'embed avec le bouton
     view = LienFutur()
     await ctx.send(embed=embed, view=view)
-
-    await ctx.send(embed=embed)
 
     # Rôle temporaire
     role_temp = ctx.guild.get_role(ROLE_FUTUR_TEMPORAIRE)
