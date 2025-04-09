@@ -211,12 +211,19 @@ class LienFutur(discord.ui.View):
             url="https://discord.com/channels/946034497219100723/1359547424166908116"  # Remplace ce lien par ton lien réel
         ))
 
+class LienFutur(discord.ui.View):
+    def __init__(self):
+        super().__init__()
+        self.add_item(discord.ui.Button(
+            label="📂 Accéder aux archives du futur",
+            url="https://example.com"  # Remplace par ton lien réel
+        ))
+
 @bot.command(name="futur")
 @commands.has_role(ROLE_AUTORISÉ_FUTUR)
 async def futur(ctx):
     await ctx.message.delete()
 
-    # Création de l'embed
     embed = discord.Embed(
         title="🌌 Vision du Futur",
         description=f"**{ctx.author.mention}** a entrevu le futur pendant un court instant...",
@@ -226,25 +233,28 @@ async def futur(ctx):
     embed.set_image(url="https://png.pngtree.com/thumb_back/fw800/back_our/20190625/ourmid/pngtree-financial-future-city-banner-background-image_260946.jpg")
     embed.set_footer(text="Durée de la vision : 10 secondes")
 
-     # Envoie l'embed avec le bouton
     view = LienFutur()
     await ctx.send(embed=embed, view=view)
 
-    # Rôle temporaire
+    member = ctx.author
     role_temp = ctx.guild.get_role(ROLE_FUTUR_TEMPORAIRE)
-    if role_temp:
-        await ctx.author.add_roles(role_temp)
-        await asyncio.sleep(10)
-        await ctx.author.remove_roles(role_temp)
+    role_authorized = ctx.guild.get_role(ROLE_AUTORISÉ_FUTUR)
 
-    # Log dans le salon
+    if role_temp:
+        await member.add_roles(role_temp)
+        await asyncio.sleep(10)
+        await member.remove_roles(role_temp)
+
+    # Retirer le rôle autorisé à utiliser la commande
+    if role_authorized and role_authorized in member.roles:
+        await member.remove_roles(role_authorized)
+
+    # Log l'action
     salon_logs = ctx.guild.get_channel(SALON_LOGS_FUTUR)
     if salon_logs:
         await salon_logs.send(
-            f"🌀 **{ctx.author.display_name}** a activé `la magie temporelle` et a vu le futur restock."
+            f"🌀 **{ctx.author.display_name}** a activé `la magie temporelle`, a vu le futur restock et a perdu le rôle d'accès."
         )
-    else:
-        print("⚠️ Salon de logs introuvable.")
 
 @bot.command()
 async def uptime(ctx):
