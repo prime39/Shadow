@@ -135,13 +135,13 @@ async def atomic(ctx, membre: discord.Member):
     await ctx.send(embed=embed)
 
     # Envoi d’un message dans un autre salon avec ping du rôle
-salon_logs = ctx.guild.get_channel(SALON_LOG_ID)
-role_ping = ctx.guild.get_role(ROLE_LOG_PING)
+    salon_logs = ctx.guild.get_channel(SALON_LOG_ID)
+    role_ping = ctx.guild.get_role(ROLE_LOG_PING)
 
-if salon_logs and role_ping:
-    await salon_logs.send(f"""{role_ping.mention} 📜 **{ctx.author.display_name}** a invoqué la magie **Atomic de Niveau Chaos** sur {membre.mention}.""")
-else:
-    await ctx.send("⚠️ Le salon de logs ou le rôle à ping est introuvable.")
+    if salon_logs and role_ping:
+        await salon_logs.send(f"""{role_ping.mention} 📜 **{ctx.author.display_name}** a invoqué la magie **Atomic de Niveau Chaos** sur {membre.mention}.""")
+    else:
+        await ctx.send("⚠️ Le salon de logs ou le rôle à ping est introuvable.")
 
 
 
