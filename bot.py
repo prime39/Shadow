@@ -85,15 +85,23 @@ async def on_ready():
     for guild in bot.guilds:
         GUILD_SETTINGS[guild.id] = load_guild_settings(guild.id)
 
+from discord.ui import View, Button
+
 @bot.event
 async def on_message(message):
     if message.author.bot:
-        return                                         # 🔹 Fonction 2 : Répond si le bot est mentionné directement
+        return
+
+    # 🔹 Si le bot est mentionné
     if bot.user.mentioned_in(message) and message.content.strip().startswith(f"<@{bot.user.id}>"):
         embed = discord.Embed(
             title="👋 Besoin d’aide ?",
-            description=(f"Salut {message.author.mention} ! Moi, c’est **{bot.user.name}**, je suis l'assistant de <@945762223366746142>. 🤖\n\n"
-            color=discord.Color.blue())
+            description=(
+                f"Salut {message.author.mention} ! Moi, c’est **{bot.user.name}**, je suis l'assistant de <@945762223366746142>. 🤖\n\n"
+                "Clique sur le bouton ci-dessous pour voir mes commandes disponibles !"
+            ),
+            color=discord.Color.blue()
+        )
         embed.set_thumbnail(url=bot.user.avatar.url)
         embed.set_footer(text="Réponse automatique • Disponible 24/7", icon_url=bot.user.avatar.url)
 
@@ -109,8 +117,10 @@ async def on_message(message):
         view.add_item(button)
 
         await message.channel.send(embed=embed, view=view)
-        return  # On arrête ici pour ne pas faire d'autres traitements
+        return
 
+    # Important : continue de traiter les autres commandes !
+    await bot.process_commands(message)
 
 # Gestion des erreurs globales pour toutes les commandes
 @bot.event
