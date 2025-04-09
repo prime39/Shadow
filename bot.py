@@ -161,7 +161,7 @@ SALON_LOG_ID_INVERSION = 1359274996211646514  # ID du salon de logs
 
 @bot.command()
 @commands.has_role(ROLE_AUTORISÉ_INVERSION)
-async def atomicinversion(ctx, membre: discord.Member):
+async def inversion(ctx, membre: discord.Member):
     await ctx.message.delete()
 
     embed = discord.Embed(
@@ -186,7 +186,7 @@ async def atomicinversion(ctx, membre: discord.Member):
     if salon_logs and role_ping:
         await salon_logs.send(
             f"""{role_ping.mention} ⚠️ **{ctx.author.display_name}** a utilisé *La magie Atomic Niveau Inversion* sur {membre.mention}.
-Un échange d’âmes a été opéré. Une vérification RP est requise."""
+Veuillez éffectuer l'inversion"""
         )
 
     # ❌ Retirer un rôle à l'auteur
