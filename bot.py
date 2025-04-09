@@ -139,7 +139,7 @@ async def atomic(ctx, membre: discord.Member):
 
     if salon_logs and role_ping:
         await salon_logs.send(
-            f"""{role_ping.mention} 📜 **{ctx.author.display_name}** a invoqué la magie **Atomic de Niveau Chaos** sur {membre.mention}."""
+            f"""{role_ping.mention} 📜 **{ctx.author.display_name}** a invoqué la magie **Atomic de Niveau Chaos** sur {membre.mention}.""")
 
     # Retirer le rôle de l’auteur
     role_to_remove = ctx.guild.get_role(ROLE_A_RETIRER)
