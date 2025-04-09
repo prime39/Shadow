@@ -199,6 +199,41 @@ Veuillez éffectuer l'inversion"""
     if role_to_add:
         await membre.add_roles(role_to_add)
 
+ROLE_FUTUR_TEMPORAIRE = 1359547493687234641  # Rôle temporaire à donner
+SALON_LOGS_FUTUR = 1359274996211646514      # Salon de logs
+
+@bot.command(name="futur")
+async def futur(ctx):
+    await ctx.message.delete()
+
+    # Création de l'embed
+    embed = discord.Embed(
+        title="🌌 Vision du Futur",
+        description=f"**{ctx.author.mention}** a entrevu le futur pendant un court instant...",
+        color=discord.Color.blue()
+    )
+    embed.set_thumbnail(url="https://cdn.discordapp.com/icons/946034497219100723/65e3c9c08a1386ef3c4709a72bc56c5b.webp?size=1024&format=webp")  # Icône stylisée
+    embed.set_image(url="https://png.pngtree.com/thumb_back/fw800/back_our/20190625/ourmid/pngtree-financial-future-city-banner-background-image_260946.jpg")  # Visuel immersif
+    embed.set_footer(text="Durée de la vision : 10 secondes")
+
+    await ctx.send(embed=embed)
+
+    # Rôle temporaire
+    role_temp = ctx.guild.get_role(ROLE_FUTUR_TEMPORAIRE)
+    if role_temp:
+        await ctx.author.add_roles(role_temp)
+        await asyncio.sleep(10)
+        await ctx.author.remove_roles(role_temp)
+
+    # Log dans le salon
+    salon_logs = ctx.guild.get_channel(SALON_LOGS_FUTUR)
+    if salon_logs:
+        await salon_logs.send(
+            f"🌀 **{ctx.author.display_name}** a activé `la magie temporelle` et a vu le futur restock."
+        )
+    else:
+        print("⚠️ Salon de logs introuvable.")
+
 # Token pour démarrer le bot (à partir des secrets)
 # Lancer le bot avec ton token depuis l'environnement  
 keep_alive()
