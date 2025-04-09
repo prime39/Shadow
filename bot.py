@@ -85,6 +85,33 @@ async def on_ready():
     for guild in bot.guilds:
         GUILD_SETTINGS[guild.id] = load_guild_settings(guild.id)
 
+@bot.event
+async def on_message(message):
+    if message.author.bot:
+        return                                         # 🔹 Fonction 2 : Répond si le bot est mentionné directement
+    if bot.user.mentioned_in(message) and message.content.strip().startswith(f"<@{bot.user.id}>"):
+        embed = discord.Embed(
+            title="👋 Besoin d’aide ?",
+            description=(f"Salut {message.author.mention} ! Moi, c’est **{bot.user.name}**, je suis l'assistant de <@945762223366746142>. 🤖\n\n"
+            color=discord.Color.blue()
+        )
+        embed.set_thumbnail(url=bot.user.avatar.url)
+        embed.set_footer(text="Réponse automatique • Disponible 24/7", icon_url=bot.user.avatar.url)
+
+        view = View()
+        button = Button(label="📜 Voir les commandes", style=discord.ButtonStyle.primary, custom_id="help_button")
+
+        async def button_callback(interaction: discord.Interaction):
+            ctx = await bot.get_context(interaction.message)
+            await ctx.invoke(bot.get_command("help"))
+            await interaction.response.send_message("Voici la liste des commandes !", ephemeral=True)
+
+        button.callback = button_callback
+        view.add_item(button)
+
+        await message.channel.send(embed=embed, view=view)
+        return  # On arrête ici pour ne pas faire d'autres traitements
+
 
 # Gestion des erreurs globales pour toutes les commandes
 @bot.event
@@ -209,14 +236,6 @@ class LienFutur(discord.ui.View):
         self.add_item(discord.ui.Button(
             label="Accéder au salon",
             url="https://discord.com/channels/946034497219100723/1359547424166908116"  # Remplace ce lien par ton lien réel
-        ))
-
-class LienFutur(discord.ui.View):
-    def __init__(self):
-        super().__init__()
-        self.add_item(discord.ui.Button(
-            label="📂 Accéder aux archives du futur",
-            url="https://example.com"  # Remplace par ton lien réel
         ))
 
 @bot.command(name="futur")
