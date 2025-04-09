@@ -203,6 +203,14 @@ ROLE_FUTUR_TEMPORAIRE = 1359547493687234641  # Rôle temporaire à donner
 SALON_LOGS_FUTUR = 1359274996211646514       # Salon de logs
 ROLE_AUTORISÉ_FUTUR = 1359554146725789856    # Rôle autorisé à utiliser la commande
 
+class LienFutur(discord.ui.View):
+    def __init__(self):
+        super().__init__()
+        self.add_item(discord.ui.Button(
+            label="Accéder au salon",
+            url="https://discord.com/channels/946034497219100723/1359547424166908116"  # Remplace ce lien par ton lien réel
+        ))
+
 @bot.command(name="futur")
 @commands.has_role(ROLE_AUTORISÉ_FUTUR)
 async def futur(ctx):
@@ -217,6 +225,10 @@ async def futur(ctx):
     embed.set_thumbnail(url="https://cdn.discordapp.com/icons/946034497219100723/65e3c9c08a1386ef3c4709a72bc56c5b.webp?size=1024&format=webp")
     embed.set_image(url="https://png.pngtree.com/thumb_back/fw800/back_our/20190625/ourmid/pngtree-financial-future-city-banner-background-image_260946.jpg")
     embed.set_footer(text="Durée de la vision : 10 secondes")
+
+     # Envoie l'embed avec le bouton
+    view = LienFutur()
+    await ctx.send(embed=embed, view=view)
 
     await ctx.send(embed=embed)
 
