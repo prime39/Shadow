@@ -153,7 +153,51 @@ async def atomic(ctx, membre: discord.Member):
     else:
         await ctx.send("⚠️ Le rôle à ajouter est introuvable.")
 
+ROLE_AUTORISÉ_INVERSION = 1359441308237828189  # Rôle autorisé à lancer la commande
+ROLE_A_RETIRER_INVERSION = 1359441308237828189  # Rôle à retirer à l’auteur
+ROLE_A_AJOUTER_INVERSION = 1359469141320536074  # Rôle à donner à la cible
+ROLE_LOG_PING_INVERSION = 1087764830531883019  # Rôle à mentionner dans le salon de logs
+SALON_LOG_ID_INVERSION = 1359274996211646514  # ID du salon de logs
 
+@bot.command()
+@commands.has_role(ROLE_AUTORISÉ_INVERSION)
+async def atomicinversion(ctx, membre: discord.Member):
+    await ctx.message.delete()
+
+    embed = discord.Embed(
+        title="Une magie niveau inversion viens d'etre utilisé !",
+        description=f"**{ctx.author.mention}** a déclenché la magie **Atomic niveau Inversion** sur {membre.mention}.\nLe flux du mana vient de s'inverser...",
+        color=discord.Color.dark_red()
+    )
+
+    embed.set_thumbnail(url="https://cdn.discordapp.com/icons/946034497219100723/65e3c9c08a1386ef3c4709a72bc56c5b.webp?size=1024&format=webp")  # Image stylisée haut droite
+    embed.set_image(url="https://i.ytimg.com/vi/WY5glA1U-pk/hq720.jpg?sqp=-oaymwEhCK4FEIIDSFryq4qpAxMIARUAAAAAGAElAADIQj0AgKJD&rs=AOn4CLAl2g29pAjNHDwRLpalMu4y_WFJHw")  # Image du sort "Inversion"
+    embed.set_footer(
+        text="Shadow Garden",
+        icon_url="https://cdn.discordapp.com/icons/946034497219100723/65e3c9c08a1386ef3c4709a72bc56c5b.webp?size=1024&format=webp"
+    )
+
+    await ctx.send(embed=embed)
+
+    # 🔁 Log RP dans un autre salon
+    salon_logs = ctx.guild.get_channel(SALON_LOG_ID_INVERSION)
+    role_ping = ctx.guild.get_role(ROLE_LOG_PING_INVERSION)
+
+    if salon_logs and role_ping:
+        await salon_logs.send(
+            f"""{role_ping.mention} ⚠️ **{ctx.author.display_name}** a utilisé *La magie Atomic Niveau Inversion* sur {membre.mention}.
+Un échange d’âmes a été opéré. Une vérification RP est requise."""
+        )
+
+    # ❌ Retirer un rôle à l'auteur
+    role_to_remove = ctx.guild.get_role(ROLE_A_RETIRER_INVERSION)
+    if role_to_remove and role_to_remove in ctx.author.roles:
+        await ctx.author.remove_roles(role_to_remove)
+
+    # ✅ Ajouter un rôle au membre ciblé
+    role_to_add = ctx.guild.get_role(ROLE_A_AJOUTER_INVERSION)
+    if role_to_add:
+        await membre.add_roles(role_to_add)
 
 # Token pour démarrer le bot (à partir des secrets)
 # Lancer le bot avec ton token depuis l'environnement  
