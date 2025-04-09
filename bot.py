@@ -200,9 +200,11 @@ Veuillez éffectuer l'inversion"""
         await membre.add_roles(role_to_add)
 
 ROLE_FUTUR_TEMPORAIRE = 1359547493687234641  # Rôle temporaire à donner
-SALON_LOGS_FUTUR = 1359274996211646514      # Salon de logs
+SALON_LOGS_FUTUR = 1359274996211646514       # Salon de logs
+ROLE_AUTORISÉ_FUTUR = 1359554146725789856    # Rôle autorisé à utiliser la commande
 
 @bot.command(name="futur")
+@commands.has_role(ROLE_AUTORISÉ_FUTUR)
 async def futur(ctx):
     await ctx.message.delete()
 
@@ -212,8 +214,8 @@ async def futur(ctx):
         description=f"**{ctx.author.mention}** a entrevu le futur pendant un court instant...",
         color=discord.Color.blue()
     )
-    embed.set_thumbnail(url="https://cdn.discordapp.com/icons/946034497219100723/65e3c9c08a1386ef3c4709a72bc56c5b.webp?size=1024&format=webp")  # Icône stylisée
-    embed.set_image(url="https://png.pngtree.com/thumb_back/fw800/back_our/20190625/ourmid/pngtree-financial-future-city-banner-background-image_260946.jpg")  # Visuel immersif
+    embed.set_thumbnail(url="https://cdn.discordapp.com/icons/946034497219100723/65e3c9c08a1386ef3c4709a72bc56c5b.webp?size=1024&format=webp")
+    embed.set_image(url="https://png.pngtree.com/thumb_back/fw800/back_our/20190625/ourmid/pngtree-financial-future-city-banner-background-image_260946.jpg")
     embed.set_footer(text="Durée de la vision : 10 secondes")
 
     await ctx.send(embed=embed)
