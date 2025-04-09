@@ -93,8 +93,7 @@ async def on_message(message):
         embed = discord.Embed(
             title="👋 Besoin d’aide ?",
             description=(f"Salut {message.author.mention} ! Moi, c’est **{bot.user.name}**, je suis l'assistant de <@945762223366746142>. 🤖\n\n"
-            color=discord.Color.blue()
-        )
+            color=discord.Color.blue())
         embed.set_thumbnail(url=bot.user.avatar.url)
         embed.set_footer(text="Réponse automatique • Disponible 24/7", icon_url=bot.user.avatar.url)
 
