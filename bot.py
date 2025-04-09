@@ -135,7 +135,7 @@ async def atomic(ctx, membre: discord.Member):
 
     # Envoi d’un message dans un autre salon
        salon_logs = ctx.guild.get_channel(SALON_LOG_ID)
-    role_ping = ctx.guild.get_role(ROLE_LOG_PING)
+       role_ping = ctx.guild.get_role(ROLE_LOG_PING)
 
     if salon_logs and role_ping:
         await salon_logs.send(
