@@ -185,7 +185,7 @@ async def inversion(ctx, membre: discord.Member):
 
     if salon_logs and role_ping:
         await salon_logs.send(
-            f"""{role_ping.mention} ⚠️ **{ctx.author.display_name}** a utilisé *La magie Atomic Niveau Inversion* sur {membre.mention}.
+            f"""{role_ping.mention} ⚠️ **{ctx.author.display_name}** a utilisé **La magie Atomic Niveau Inversion** sur {membre.mention}.
 Veuillez éffectuer l'inversion"""
         )
 
