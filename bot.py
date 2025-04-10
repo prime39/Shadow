@@ -440,29 +440,57 @@ async def transfer(ctx, category_id: int):
 
 # COMMANDES SLASH
 
-@bot.tree.command(name="claim", description="Claim le ticket")
-async def slash_claim(interaction: discord.Interaction):
-    await interaction.response.send_message(f"{interaction.user.mention} a claim ce ticket.")
-    await log_action(f"{interaction.user.mention} a claim le ticket {interaction.channel.mention}")
+  @bot.tree.command(name="claim", description="Revendiquer le ticket en cours.")
+  async def claim(interaction: discord.Interaction):
+      # Vérifie si le membre a le rôle staff
+      staff_role = discord.utils.get(interaction.guild.roles, id=STAFF_ROLE_ID)
+      if staff_role not in interaction.user.roles:
+          await interaction.response.send_message("Vous n'avez pas la permission de revendiquer ce ticket.", ephemeral=True)
+          return
 
-@bot.tree.command(name="close", description="Ferme le ticket avec une raison")
-@app_commands.describe(reason="Raison de la fermeture")
-async def slash_close(interaction: discord.Interaction, reason: str):
-    await interaction.response.send_message(f"Ticket fermé. Raison : {reason}")
-    await log_action(f"{interaction.user.mention} a fermé le ticket {interaction.channel.name}. Raison : {reason}")
-    await asyncio.sleep(2)
-    await interaction.channel.delete()
+      # Vérifie si le ticket est déjà revendiqué
+      claimed_by = discord.utils.get(interaction.channel.members, roles=staff_role)
+      if claimed_by:
+          await interaction.response.send_message(f"Ce ticket est déjà revendiqué par {claimed_by.mention}.", ephemeral=True)
+          return
 
-@bot.tree.command(name="transfer", description="Transfère un ticket vers une autre catégorie")
-@app_commands.describe(category_id="Nouvelle catégorie ID")
-async def slash_transfer(interaction: discord.Interaction, category_id: int):
-    category = bot.get_channel(category_id)
-    if isinstance(category, discord.CategoryChannel):
-        await interaction.channel.edit(category=category)
-        await interaction.response.send_message(f"Ticket transféré vers {category.name}")
-        await log_action(f"{interaction.user.mention} a transféré le ticket vers {category.name}")
-    else:
-        await interaction.response.send_message("Catégorie invalide.", ephemeral=True)
+      # Attribue le ticket au membre
+      await interaction.channel.set_permissions(interaction.user, read_messages=True, send_messages=True)
+      await interaction.response.send_message(f"{interaction.user.mention} a revendiqué ce ticket.")
+      await log_action(f"{interaction.user.mention} a revendiqué le ticket {interaction.channel.mention}.", "Réclamation")
+
+
+  @bot.tree.command(name="close", description="Fermer le ticket en cours avec une raison.")
+  @app_commands.describe(reason="Raison de la fermeture du ticket.")
+  async def close(interaction: discord.Interaction, reason: str):
+      # Vérifie si l'utilisateur a la permission de fermer le ticket
+      staff_role = discord.utils.get(interaction.guild.roles, id=STAFF_ROLE_ID)
+      if staff_role not in interaction.user.roles:
+          await interaction.response.send_message("Vous n'avez pas la permission de fermer ce ticket.", ephemeral=True)
+          return
+
+      # Enregistre l'action dans les logs
+      await log_action(f"{interaction.user.mention} a fermé le ticket {interaction.channel.mention}.", "Fermeture", reason)
+
+      # Supprime le canal après confirmation
+      await interaction.response.send_message(f"Le ticket sera fermé pour la raison suivante : {reason}")
+      await interaction.channel.delete()
+
+
+  @bot.tree.command(name="transfer", description="Transférer le ticket en cours vers une autre catégorie.")
+  @app_commands.describe(category="Nouvelle catégorie pour le ticket.")
+  async def transfer(interaction: discord.Interaction, category: discord.CategoryChannel):
+      # Vérifie si l'utilisateur a la permission de transférer le ticket
+      staff_role = discord.utils.get(interaction.guild.roles, id=STAFF_ROLE_ID)
+      if staff_role not in interaction.user.roles:
+          await interaction.response.send_message("Vous n'avez pas la permission de transférer ce ticket.", ephemeral=True)
+          return
+
+      # Transfère le canal vers la nouvelle catégorie
+      await interaction.channel.edit(category=category)
+      await interaction.response.send_message(f"Le ticket a été transféré vers la catégorie {category.name}.")
+      await log_action(f"{interaction.user.mention} a transféré le ticket {interaction.channel.mention} vers {category.name}.", "Transfert")
+
 
 # Token pour démarrer le bot (à partir des secrets)
 # Lancer le bot avec ton token depuis l'environnement  
