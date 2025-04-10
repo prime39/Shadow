@@ -22,6 +22,7 @@ import platform
 
 token = os.environ['SHADOW']
 intents = discord.Intents.all()
+intents = discord.Intents.default()
 start_time = time.time()
 client = discord.Client(intents=intents)
 bot = commands.Bot(command_prefix="-", intents=intents, help_command=None)
