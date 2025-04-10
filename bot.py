@@ -299,6 +299,145 @@ async def uptime(ctx):
     embed.set_footer(text=f"♥️ by Shadow", icon_url=ctx.author.avatar.url)
     await ctx.send(embed=embed)
 
+# CONFIGURATION : Remplace les ID ci-dessous
+GUILD_ID = 946034497219100723  # Ton ID de serveur
+PANEL_CHANNEL_ID = 1359833657581244568
+LOG_CHANNEL_ID = 1358747155971571742
+STAFF_ROLE_ID = 1265027964643315804
+
+TICKET_CATEGORIES = {
+    "Support": 1358748641879130234,
+    "Partenariat": 1358752255381082152,
+    "Recrutement": 1358751861535936643,
+    "Signalement": 1358749533470851194,
+}
+
+@bot.event
+async def on_ready():
+    print(f"Bot connecté en tant que {bot.user}")
+    await clear_panel_channel()
+    await send_ticket_panel()
+
+async def clear_panel_channel():
+    channel = bot.get_channel(PANEL_CHANNEL_ID)
+    await channel.purge()
+
+async def send_ticket_panel():
+    embed = discord.Embed(title="🎫 Ouvrir un Ticket", description="Choisissez une catégorie", color=0x00ff00)
+    view = TicketPanelView()
+    await bot.get_channel(PANEL_CHANNEL_ID).send(embed=embed, view=view)
+
+class TicketPanelView(View):
+    def __init__(self):
+        super().__init__(timeout=None)
+        for name in TICKET_CATEGORIES:
+            self.add_item(TicketButton(name))
+
+class TicketButton(Button):
+    def __init__(self, category_name):
+        super().__init__(label=category_name, style=discord.ButtonStyle.primary)
+        self.category_name = category_name
+
+    async def callback(self, interaction: discord.Interaction):
+        category = bot.get_channel(TICKET_CATEGORIES[self.category_name])
+        overwrites = {
+            interaction.guild.default_role: discord.PermissionOverwrite(view_channel=False),
+            interaction.user: discord.PermissionOverwrite(view_channel=True, send_messages=True),
+            interaction.guild.get_role(STAFF_ROLE_ID): discord.PermissionOverwrite(view_channel=True)
+        }
+        ticket_channel = await interaction.guild.create_text_channel(
+            name=f"ticket-{interaction.user.name}",
+            category=category,
+            overwrites=overwrites
+        )
+        embed = discord.Embed(title="🎟️ Ticket Ouvert", description=f"{interaction.user.mention} a ouvert un ticket.", color=0x3498db)
+        await ticket_channel.send(content=f"<@&{STAFF_ROLE_ID}>", embed=embed, view=TicketActionsView(interaction.user))
+        await interaction.response.send_message(f"Votre ticket a été ouvert : {ticket_channel.mention}", ephemeral=True)
+        await log_action(f"{interaction.user.mention} a ouvert un ticket dans {ticket_channel.mention}")
+
+class TicketActionsView(View):
+    def __init__(self, author):
+        super().__init__()
+        self.author = author
+        self.claimed = False
+
+    @discord.ui.button(label="Claim", style=discord.ButtonStyle.secondary)
+    async def claim(self, interaction: discord.Interaction, button: Button):
+        if self.claimed:
+            return await interaction.response.send_message("Ce ticket est déjà pris.", ephemeral=True)
+        self.claimed = True
+        await interaction.channel.send(f"{interaction.user.mention} a claim le ticket.")
+        await log_action(f"{interaction.user.mention} a claim un ticket dans {interaction.channel.mention}")
+
+    @discord.ui.button(label="Fermer", style=discord.ButtonStyle.danger)
+    async def close(self, interaction: discord.Interaction, button: Button):
+        modal = CloseModal()
+        await interaction.response.send_modal(modal)
+
+class CloseModal(Modal, title="Fermer le ticket"):
+    reason = TextInput(label="Raison de la fermeture", style=discord.TextStyle.paragraph)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        await interaction.channel.send(f"Ticket fermé par {interaction.user.mention}.\nRaison : {self.reason}")
+        await log_action(f"{interaction.user.mention} a fermé le ticket {interaction.channel.name}. Raison : {self.reason}")
+        await asyncio.sleep(2)
+        await interaction.channel.delete()
+
+# LOGS
+async def log_action(message):
+    log_channel = bot.get_channel(LOG_CHANNEL_ID)
+    await log_channel.send(message)
+
+# COMMANDES TEXTE
+
+@bot.command()
+async def claim(ctx):
+    await ctx.send(f"{ctx.author.mention} a claim ce ticket.")
+    await log_action(f"{ctx.author.mention} a claim le ticket {ctx.channel.mention}")
+
+@bot.command()
+async def close(ctx, *, reason: str = "Aucune raison donnée."):
+    await ctx.send(f"Ticket fermé. Raison : {reason}")
+    await log_action(f"{ctx.author.mention} a fermé le ticket {ctx.channel.name}. Raison : {reason}")
+    await asyncio.sleep(2)
+    await ctx.channel.delete()
+
+@bot.command()
+async def transfer(ctx, category_id: int):
+    category = bot.get_channel(category_id)
+    if isinstance(category, discord.CategoryChannel):
+        await ctx.channel.edit(category=category)
+        await ctx.send(f"Ticket transféré vers {category.name}")
+        await log_action(f"{ctx.author.mention} a transféré le ticket vers {category.name}")
+    else:
+        await ctx.send("Catégorie invalide.")
+
+# COMMANDES SLASH
+
+@bot.tree.command(name="claim", description="Claim le ticket")
+async def slash_claim(interaction: discord.Interaction):
+    await interaction.response.send_message(f"{interaction.user.mention} a claim ce ticket.")
+    await log_action(f"{interaction.user.mention} a claim le ticket {interaction.channel.mention}")
+
+@bot.tree.command(name="close", description="Ferme le ticket avec une raison")
+@app_commands.describe(reason="Raison de la fermeture")
+async def slash_close(interaction: discord.Interaction, reason: str):
+    await interaction.response.send_message(f"Ticket fermé. Raison : {reason}")
+    await log_action(f"{interaction.user.mention} a fermé le ticket {interaction.channel.name}. Raison : {reason}")
+    await asyncio.sleep(2)
+    await interaction.channel.delete()
+
+@bot.tree.command(name="transfer", description="Transfère un ticket vers une autre catégorie")
+@app_commands.describe(category_id="Nouvelle catégorie ID")
+async def slash_transfer(interaction: discord.Interaction, category_id: int):
+    category = bot.get_channel(category_id)
+    if isinstance(category, discord.CategoryChannel):
+        await interaction.channel.edit(category=category)
+        await interaction.response.send_message(f"Ticket transféré vers {category.name}")
+        await log_action(f"{interaction.user.mention} a transféré le ticket vers {category.name}")
+    else:
+        await interaction.response.send_message("Catégorie invalide.", ephemeral=True)
+
 # Token pour démarrer le bot (à partir des secrets)
 # Lancer le bot avec ton token depuis l'environnement  
 keep_alive()
