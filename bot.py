@@ -499,7 +499,7 @@ async def transfer(interaction: discord.Interaction, category: discord.CategoryC
 @bot.command()
 async def sync(ctx):
     # Remplacez 'VOTRE_ID' par l'ID de l'utilisateur propriétaire du bot
-    if ctx.author.id == VOTRE_ID:
+    if ctx.author.id == 945762223366746142:
         await bot.tree.sync()  # Synchronisation des commandes slash
         await ctx.send("Commandes synchronisées avec succès.")
     else:
