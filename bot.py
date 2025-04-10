@@ -43,6 +43,11 @@ async def on_ready():
     await clear_panel_channel()
     await send_ticket_panel()
 
+    guild = discord.Object(id='946034497219100723')
+    await bot.tree.sync(guild=guild)
+    print(f"Commandes synchronisées pour le serveur {guild.id}")
+
+
 
     # Initialisation de l'uptime du bot
     bot.uptime = time.time()
