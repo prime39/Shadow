@@ -374,14 +374,22 @@ class TicketActionsView(View):
         modal = CloseModal()
         await interaction.response.send_modal(modal)
 
-class CloseModal(Modal, title="Fermer le ticket"):
-    reason = TextInput(label="Raison de la fermeture", style=discord.TextStyle.paragraph)
+class CloseModal(Modal):
+    def __init__(self):
+        super().__init__(title="Fermer le ticket")
+
+    reason = TextInput(
+        label="Raison de la fermeture",
+        style=discord.TextStyle.paragraph,
+        required=True
+    )
 
     async def on_submit(self, interaction: discord.Interaction):
-        await interaction.channel.send(f"Ticket fermé par {interaction.user.mention}.\nRaison : {self.reason}")
-        await log_action(f"{interaction.user.mention} a fermé le ticket {interaction.channel.name}. Raison : {self.reason}")
+        await interaction.channel.send(f"Ticket fermé par {interaction.user.mention}.\nRaison : {self.reason.value}")
+        await log_action(f"{interaction.user.mention} a fermé le ticket {interaction.channel.name}. Raison : {self.reason.value}")
         await asyncio.sleep(2)
         await interaction.channel.delete()
+
 
 # LOGS
 async def log_action(message):
