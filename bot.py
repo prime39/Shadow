@@ -441,7 +441,7 @@ async def transfer(ctx, category_id: int):
 # COMMANDES SLASH
 
 @bot.tree.command(name="claim", description="Revendiquer le ticket en cours.")
-  async def claim(interaction: discord.Interaction):
+async def claim(interaction: discord.Interaction):
       # Vérifie si le membre a le rôle staff
       staff_role = discord.utils.get(interaction.guild.roles, id=STAFF_ROLE_ID)
       if staff_role not in interaction.user.roles:
@@ -462,7 +462,7 @@ async def transfer(ctx, category_id: int):
 
 @bot.tree.command(name="close", description="Fermer le ticket en cours avec une raison.")
 @app_commands.describe(reason="Raison de la fermeture du ticket.")
-  async def close(interaction: discord.Interaction, reason: str):
+async def close(interaction: discord.Interaction, reason: str):
       # Vérifie si l'utilisateur a la permission de fermer le ticket
       staff_role = discord.utils.get(interaction.guild.roles, id=STAFF_ROLE_ID)
       if staff_role not in interaction.user.roles:
@@ -478,7 +478,7 @@ async def transfer(ctx, category_id: int):
 
 @bot.tree.command(name="transfer", description="Transférer le ticket en cours vers une autre catégorie.")
 @app_commands.describe(category="Nouvelle catégorie pour le ticket.")
-  async def transfer(interaction: discord.Interaction, category: discord.CategoryChannel):
+async def transfer(interaction: discord.Interaction, category: discord.CategoryChannel):
       # Vérifie si l'utilisateur a la permission de transférer le ticket
       staff_role = discord.utils.get(interaction.guild.roles, id=STAFF_ROLE_ID)
       if staff_role not in interaction.user.roles:
