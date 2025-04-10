@@ -393,9 +393,15 @@ class CloseModal(Modal):
 
 
 # LOGS
-async def log_action(message):
+async def log_action(message: str, action_type: str = "Action"):
     log_channel = bot.get_channel(LOG_CHANNEL_ID)
-    await log_channel.send(message)
+    embed = discord.Embed(
+        title=f"📋 {action_type}",
+        description=message,
+        color=0x2f3136
+    )
+    embed.set_footer(text=f"Log généré automatiquement", icon_url=bot.user.avatar.url if bot.user.avatar else None)
+    await log_channel.send(embed=embed)
 
 # COMMANDES TEXTE
 
