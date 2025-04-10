@@ -13,6 +13,7 @@ import traceback
 from keep_alive import keep_alive
 from discord.ui import Button, View
 from discord.ui import View, Select
+from discord.ui import Modal, TextInput
 from discord.ext import tasks
 from collections import defaultdict
 from collections import deque
