@@ -32,6 +32,17 @@ async def on_ready():
     start_time = time.time()  # Défini l'heure de démarrage lorsque le bot est prêt
     print(f'{bot.user} est prêt et l\'uptime est maintenant calculable.')
     print(f"✅ Le bot {bot.user} est maintenant connecté ! (ID: {bot.user.id})")
+    print(f"✅ Connecté en tant que {bot.user}")
+    await bot.wait_until_ready()
+    try:
+        synced = await bot.tree.sync(guild=discord.Object(id=GUILD_ID))  # Sync local au serveur
+        print(f"🔧 {len(synced)} commande(s) slash synchronisée(s).")
+    except Exception as e:
+        print(f"❌ Erreur de synchronisation : {e}")
+    
+    await clear_panel_channel()
+    await send_ticket_panel()
+
 
     # Initialisation de l'uptime du bot
     bot.uptime = time.time()
