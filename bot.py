@@ -397,31 +397,88 @@ async def ban(interaction: discord.Interaction, membre: discord.Member, raison: 
     embed.add_field(name="Raison", value=raison, inline=False)
     await log_channel.send(embed=embed)
 
+def parse_duration(duration_str):
+    """Parse une durée donnée sous forme '1h', '30m', '15s' et retourne la durée en secondes."""
+    duration_str = duration_str.lower()
+    seconds = 0
+
+    # Regex pour capturer les heures, minutes et secondes
+    hours = re.search(r'(\d+)(h|hour|hrs)', duration_str)
+    minutes = re.search(r'(\d+)(m|min|minute)', duration_str)
+    seconds = re.search(r'(\d+)(s|sec|second)', duration_str)
+
+    if hours:
+        seconds += int(hours.group(1)) * 3600
+    if minutes:
+        seconds += int(minutes.group(1)) * 60
+    if seconds:
+        seconds += int(seconds.group(1))
+
+    return seconds
+
+@bot.event
+async def on_ready():
+    await bot.tree.sync(guild=discord.Object(id=GUILD_ID))
+    print(f"✅ Bot connecté : {bot.user}")
+
 # MUTE
-@bot.tree.command(name="mute", description="Mute un membre pour une durée", guild=discord.Object(id=GUILD_ID))
-@is_modo()
-@app_commands.describe(membre="Le membre à mute", duree="Durée en secondes", raison="Raison du mute")
-async def mute(interaction: discord.Interaction, membre: discord.Member, duree: int, raison: str = "Aucune raison"):
+@bot.tree.command(name="mute", description="Mute un membre pour une durée donnée (ex: 1h, 30m, 15s)", guild=discord.Object(id=GUILD_ID))
+@commands.has_role(ROLE_MOD_ID)
+@app_commands.describe(membre="Le membre à mute", duree="Durée en heures, minutes ou secondes", raison="Raison du mute")
+async def mute(interaction: discord.Interaction, membre: discord.Member, duree: str, raison: str = "Aucune raison"):
+
+    # Vérification des permissions de rôle
+    if membre.top_role >= interaction.user.top_role:
+        await interaction.response.send_message("⛔ Tu ne peux pas mute un membre avec un rôle égal ou supérieur au tien.", ephemeral=True)
+        return
+
+    # Conversion de la durée
+    try:
+        mute_duration = parse_duration(duree)
+        if mute_duration <= 0:
+            await interaction.response.send_message("❌ La durée spécifiée n'est pas valide. Utilise des formats comme '1h', '30m', ou '15s'.", ephemeral=True)
+            return
+    except ValueError:
+        await interaction.response.send_message("❌ Format de durée incorrect. Exemple : '1h', '30m', ou '15s'.", ephemeral=True)
+        return
+
     mute_role = discord.utils.get(interaction.guild.roles, name="Muted")
+
     if not mute_role:
-        mute_role = await interaction.guild.create_role(name="Muted")
-        for channel in interaction.guild.channels:
-            await channel.set_permissions(mute_role, send_messages=False, speak=False)
+        try:
+            mute_role = await interaction.guild.create_role(name="Muted", reason="Création du rôle Muted")
+            for channel in interaction.guild.channels:
+                await channel.set_permissions(mute_role, send_messages=False, speak=False, add_reactions=False)
+        except discord.Forbidden:
+            await interaction.response.send_message("❌ Je n'ai pas les permissions pour créer le rôle Muted.", ephemeral=True)
+            return
 
-    await membre.add_roles(mute_role, reason=raison)
-    await interaction.response.send_message(f"{membre.mention} a été mute pendant {duree} secondes.", ephemeral=True)
+    try:
+        await membre.add_roles(mute_role, reason=raison)
+    except discord.Forbidden:
+        await interaction.response.send_message("❌ Je n'ai pas pu ajouter le rôle Muted à ce membre.", ephemeral=True)
+        return
 
+    await interaction.response.send_message(f"✅ {membre.mention} a été mute pour {duree}.", ephemeral=True)
+
+    # Logs
     log_channel = bot.get_channel(SANCTION_LOG_ID)
     embed = discord.Embed(title="🔇 Mute", color=discord.Color.orange(), timestamp=datetime.utcnow())
     embed.add_field(name="Modérateur", value=interaction.user.mention)
-    embed.add_field(name="Membre mute", value=membre.mention)
-    embed.add_field(name="Durée", value=f"{duree} secondes")
+    embed.add_field(name="Membre", value=membre.mention)
+    embed.add_field(name="Durée", value=duree)
     embed.add_field(name="Raison", value=raison, inline=False)
     await log_channel.send(embed=embed)
 
-    await asyncio.sleep(duree)
+    # Unmute après délai
+    await asyncio.sleep(mute_duration)
     if mute_role in membre.roles:
-        await membre.remove_roles(mute_role, reason="Fin du mute")
+        try:
+            await membre.remove_roles(mute_role, reason="Fin du mute automatique")
+            await log_channel.send(f"🔊 {membre.mention} a été automatiquement unmute.")
+        except:
+            pass
+
 
 # UNMUTE
 @bot.tree.command(name="unmute", description="Retire le mute d'un membre", guild=discord.Object(id=GUILD_ID))
