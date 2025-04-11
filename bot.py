@@ -397,24 +397,26 @@ async def ban(interaction: discord.Interaction, membre: discord.Member, raison: 
     embed.add_field(name="Raison", value=raison, inline=False)
     await log_channel.send(embed=embed)
 
+# MUTE
+
 def parse_duration(duration_str):
-    """Parse une durée donnée sous forme '1h', '30m', '15s' et retourne la durée en secondes."""
+    """Parse une durée comme '1h30m15s' et retourne la durée en secondes."""
     duration_str = duration_str.lower()
-    seconds = 0
+    total_seconds = 0
 
-    # Regex pour capturer les heures, minutes et secondes
-    hours = re.search(r'(\d+)(h|hour|hrs)', duration_str)
-    minutes = re.search(r'(\d+)(m|min|minute)', duration_str)
-    seconds = re.search(r'(\d+)(s|sec|second)', duration_str)
+    hours = re.findall(r'(\d+)\s*(h|hour|hrs)', duration_str)
+    minutes = re.findall(r'(\d+)\s*(m|min|minute)', duration_str)
+    seconds = re.findall(r'(\d+)\s*(s|sec|second)', duration_str)
 
-    if hours:
-        seconds += int(hours.group(1)) * 3600
-    if minutes:
-        seconds += int(minutes.group(1)) * 60
-    if seconds:
-        seconds += int(seconds.group(1))
+    for value, _ in hours:
+        total_seconds += int(value) * 3600
+    for value, _ in minutes:
+        total_seconds += int(value) * 60
+    for value, _ in seconds:
+        total_seconds += int(value)
 
-    return seconds
+    return total_seconds
+
 
 @bot.event
 async def on_ready():
@@ -472,12 +474,19 @@ async def mute(interaction: discord.Interaction, membre: discord.Member, duree: 
 
     # Unmute après délai
     await asyncio.sleep(mute_duration)
-    if mute_role in membre.roles:
-        try:
-            await membre.remove_roles(mute_role, reason="Fin du mute automatique")
-            await log_channel.send(f"🔊 {membre.mention} a été automatiquement unmute.")
-        except:
-            pass
+
+    try:
+        # On vérifie que le membre est encore dans le serveur
+        updated_member = await interaction.guild.fetch_member(membre.id)
+        mute_role = discord.utils.get(interaction.guild.roles, name="Muted")
+
+        if mute_role in updated_member.roles:
+            await updated_member.remove_roles(mute_role, reason="Fin du mute automatique")
+            await log_channel.send(f"🔊 {updated_member.mention} a été automatiquement unmute.")
+    except discord.NotFound:
+        print(f"{membre} a quitté le serveur avant la fin du mute.")
+    except Exception as e:
+        print(f"Erreur lors du unmute : {e}")
 
 
 # UNMUTE
