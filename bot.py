@@ -17,6 +17,7 @@ from discord.ui import Modal, TextInput
 from discord.ext import tasks
 from collections import defaultdict
 from collections import deque
+from datetime import datetime
 import psutil
 import platform
 
@@ -316,6 +317,64 @@ async def uptime(ctx):
     )
     embed.set_footer(text=f"♥️ by Shadow", icon_url=ctx.author.avatar.url)
     await ctx.send(embed=embed)
+
+import discord
+from discord.ext import commands
+from datetime import datetime
+
+intents = discord.Intents.all()
+bot = commands.Bot(command_prefix="!", intents=intents)
+
+LOG_CHANNEL_ID = 123456789012345678  # Remplace par l'ID du salon où tu veux log
+
+def create_embed(title, description, color=discord.Color.blurple()):
+    return discord.Embed(
+        title=title,
+        description=description,
+        color=color,
+        timestamp=datetime.utcnow()
+    )
+
+@bot.event
+async def on_ready():
+    print(f"✅ Connecté en tant que {bot.user}")
+
+@bot.event
+async def on_message_delete(message):
+    if message.author.bot:
+        return
+    log_channel = bot.get_channel(LOG_CHANNEL_ID)
+    embed = create_embed("🗑️ Message supprimé", f"**Auteur :** {message.author.mention}\n**Contenu :** {message.content}")
+    await log_channel.send(embed=embed)
+
+@bot.event
+async def on_voice_state_update(member, before, after):
+    log_channel = bot.get_channel(LOG_CHANNEL_ID)
+    if before.channel != after.channel:
+        if after.channel:
+            embed = create_embed("🔊 Connexion vocale", f"{member.mention} a rejoint **{after.channel.name}**")
+        else:
+            embed = create_embed("📴 Déconnexion vocale", f"{member.mention} a quitté **{before.channel.name}**")
+        await log_channel.send(embed=embed)
+
+@bot.event
+async def on_guild_channel_delete(channel):
+    log_channel = bot.get_channel(LOG_CHANNEL_ID)
+    embed = create_embed("🧹 Salon supprimé", f"Nom : `{channel.name}`\nType : `{channel.type}`")
+    await log_channel.send(embed=embed)
+
+@bot.event
+async def on_guild_role_delete(role):
+    log_channel = bot.get_channel(LOG_CHANNEL_ID)
+    embed = create_embed("❌ Rôle supprimé", f"Nom : `{role.name}`\nID : `{role.id}`")
+    await log_channel.send(embed=embed)
+
+@bot.event
+async def on_guild_role_update(before, after):
+    log_channel = bot.get_channel(LOG_CHANNEL_ID)
+    if before.name != after.name or before.permissions != after.permissions:
+        embed = create_embed("🛠️ Rôle modifié", f"Avant : `{before.name}`\nAprès : `{after.name}`")
+        await log_channel.send(embed=embed)
 
 # Token pour démarrer le bot (à partir des secrets)
 # Lancer le bot avec ton token depuis l'environnement  
