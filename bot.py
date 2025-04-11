@@ -367,6 +367,92 @@ async def on_message_edit(before, after):
         embed = embed_message_edit(before, after)
         await log_channel.send(embed=embed)
 
+GUILD_ID = 946034497219100723         # Ton serveur
+SANCTION_LOG_ID = 1358835848514240602  # Salon où seront loggées les sanctions
+ROLE_MOD_ID = 1230032682394583130      # Rôle ayant accès aux commandes
+
+@bot.event
+async def on_ready():
+    await bot.tree.sync(guild=discord.Object(id=GUILD_ID))
+    print(f"✅ Bot connecté : {bot.user}")
+
+# Vérifie que l'utilisateur a le bon rôle
+def is_modo():
+    async def predicate(interaction: discord.Interaction):
+        return any(role.id == ROLE_MOD_ID for role in interaction.user.roles)
+    return app_commands.check(predicate)
+
+# BAN
+@bot.tree.command(name="ban", description="Bannir un membre", guild=discord.Object(id=GUILD_ID))
+@is_modo()
+@app_commands.describe(membre="Le membre à bannir", raison="Raison du bannissement")
+async def ban(interaction: discord.Interaction, membre: discord.Member, raison: str = "Aucune raison"):
+    await interaction.response.send_message(f"{membre.mention} a été banni.", ephemeral=True)
+    await membre.ban(reason=raison)
+
+    log_channel = bot.get_channel(SANCTION_LOG_ID)
+    embed = discord.Embed(title="🚫 Ban", color=discord.Color.red(), timestamp=datetime.utcnow())
+    embed.add_field(name="Modérateur", value=interaction.user.mention)
+    embed.add_field(name="Membre banni", value=membre.mention)
+    embed.add_field(name="Raison", value=raison, inline=False)
+    await log_channel.send(embed=embed)
+
+# MUTE
+@bot.tree.command(name="mute", description="Mute un membre pour une durée", guild=discord.Object(id=GUILD_ID))
+@is_modo()
+@app_commands.describe(membre="Le membre à mute", duree="Durée en secondes", raison="Raison du mute")
+async def mute(interaction: discord.Interaction, membre: discord.Member, duree: int, raison: str = "Aucune raison"):
+    mute_role = discord.utils.get(interaction.guild.roles, name="Muted")
+    if not mute_role:
+        mute_role = await interaction.guild.create_role(name="Muted")
+        for channel in interaction.guild.channels:
+            await channel.set_permissions(mute_role, send_messages=False, speak=False)
+
+    await membre.add_roles(mute_role, reason=raison)
+    await interaction.response.send_message(f"{membre.mention} a été mute pendant {duree} secondes.", ephemeral=True)
+
+    log_channel = bot.get_channel(SANCTION_LOG_ID)
+    embed = discord.Embed(title="🔇 Mute", color=discord.Color.orange(), timestamp=datetime.utcnow())
+    embed.add_field(name="Modérateur", value=interaction.user.mention)
+    embed.add_field(name="Membre mute", value=membre.mention)
+    embed.add_field(name="Durée", value=f"{duree} secondes")
+    embed.add_field(name="Raison", value=raison, inline=False)
+    await log_channel.send(embed=embed)
+
+    await asyncio.sleep(duree)
+    if mute_role in membre.roles:
+        await membre.remove_roles(mute_role, reason="Fin du mute")
+
+# UNMUTE
+@bot.tree.command(name="unmute", description="Retire le mute d'un membre", guild=discord.Object(id=GUILD_ID))
+@is_modo()
+@app_commands.describe(membre="Le membre à unmute")
+async def unmute(interaction: discord.Interaction, membre: discord.Member):
+    mute_role = discord.utils.get(interaction.guild.roles, name="Muted")
+    if mute_role in membre.roles:
+        await membre.remove_roles(mute_role)
+        await interaction.response.send_message(f"{membre.mention} a été unmute.", ephemeral=True)
+
+        log_channel = bot.get_channel(SANCTION_LOG_ID)
+        embed = discord.Embed(title="🔊 Unmute", color=discord.Color.green(), timestamp=datetime.utcnow())
+        embed.add_field(name="Modérateur", value=interaction.user.mention)
+        embed.add_field(name="Membre", value=membre.mention)
+        await log_channel.send(embed=embed)
+    else:
+        await interaction.response.send_message("Ce membre n'est pas mute.", ephemeral=True)
+
+# CLEAR
+@bot.tree.command(name="clear", description="Supprime des messages", guild=discord.Object(id=GUILD_ID))
+@is_modo()
+@app_commands.describe(nombre="Nombre de messages à supprimer (max 100)")
+async def clear(interaction: discord.Interaction, nombre: int):
+    if nombre > 100 or nombre < 1:
+        await interaction.response.send_message("Le nombre doit être entre 1 et 100.", ephemeral=True)
+        return
+
+    await interaction.channel.purge(limit=nombre)
+    await interaction.response.send_message(f"🧹 {nombre} messages supprimés.", ephemeral=True)
+
 # Token pour démarrer le bot (à partir des secrets)
 # Lancer le bot avec ton token depuis l'environnement  
 keep_alive()
