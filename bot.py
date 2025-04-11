@@ -325,7 +325,7 @@ from datetime import datetime
 intents = discord.Intents.all()
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-LOG_CHANNEL_ID = 123456789012345678  # Remplace par l'ID du salon où tu veux log
+LOG_CHANNEL_ID = 1229448579517644850  # Remplace par l'ID du salon où tu veux log
 
 def create_embed(title, description, color=discord.Color.blurple()):
     return discord.Embed(
