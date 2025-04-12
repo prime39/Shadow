@@ -506,7 +506,7 @@ async def unmute(interaction: discord.Interaction, membre: discord.Member):
     except Exception as e:
         await interaction.response.send_message(f"❌ Une erreur est survenue : {e}", ephemeral=True)
         return
-               await interaction.response.send_message(f"✅ {membre.mention} a été unmute."), ephemeral=True
+               await interaction.response.send_message(f"✅ {membre.mention} a été unmute.", ephemeral=True)
 
     # Embed pour log
     embed = discord.Embed(title="🔈 Unmute (timeout retiré)", color=discord.Color.green(), timestamp=datetime.utcnow())
