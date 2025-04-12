@@ -429,63 +429,50 @@ async def on_ready():
     print(f"✅ Bot connecté : {bot.user}")
 
 # MUTE
-@bot.tree.command(name="mute", description="Mute un membre via le système natif Discord", guild=discord.Object(id=GUILD_ID))
-@is_modo()
+@bot.tree.command(name="mute", description="Mute un membre (timeout natif Discord)", guild=discord.Object(id=GUILD_ID))
 @app_commands.describe(membre="Le membre à mute", duree="Durée en heures", raison="Raison du mute")
 async def mute(interaction: discord.Interaction, membre: discord.Member, duree: float, raison: str = "Aucune raison"):
 
-    if membre.top_role >= interaction.user.top_role:
-        await interaction.response.send_message("⛔ Tu ne peux pas mute ce membre (rôle trop élevé).", ephemeral=True)
+    await interaction.response.defer(ephemeral=True)  # Pour éviter le timeout de la commande
+
+    if interaction.user.top_role <= membre.top_role and interaction.user != interaction.guild.owner:
+        await interaction.followup.send("⛔ Tu ne peux pas mute ce membre (rôle trop élevé).", ephemeral=True)
         return
 
-    # Calcul de l'heure de fin
     fin_timeout = datetime.utcnow() + timedelta(hours=duree)
 
     try:
         await membre.timeout(until=fin_timeout, reason=raison)
     except discord.Forbidden:
-        await interaction.response.send_message("❌ Je n'ai pas la permission de mute ce membre.", ephemeral=True)
+        await interaction.followup.send("❌ Je n'ai pas la permission de mute ce membre.", ephemeral=True)
         return
     except Exception as e:
-        await interaction.response.send_message(f"❌ Une erreur est survenue : {e}", ephemeral=True)
+        await interaction.followup.send(f"❌ Erreur : {e}", ephemeral=True)
         return
 
-    await interaction.response.send_message(f"✅ {membre.mention} a été mute pendant {duree}h.", ephemeral=True)
+    await interaction.followup.send(f"✅ {membre.mention} a été mute pour {duree}h.", ephemeral=True)
 
-    # Création de l'embed
+    # Embed
     embed = discord.Embed(title="🔇 Mute (timeout)", color=discord.Color.orange(), timestamp=datetime.utcnow())
     embed.add_field(name="Modérateur", value=interaction.user.mention)
+    embed.add_field(name="Membre", value=membre.mention)
     embed.add_field(name="Durée", value=f"{duree} heure(s)")
     embed.add_field(name="Raison", value=raison, inline=False)
 
-    # Log dans le salon
+    # Salon de logs
     log_channel = bot.get_channel(SANCTION_LOG_ID)
-    await log_channel.send(embed=embed)
+    if log_channel:
+        await log_channel.send(embed=embed)
 
-    # MP au membre sanctionné
+    # MP
     try:
         await membre.send(
             content=f"⚠️ Tu as été **mute (timeout)** sur **{interaction.guild.name}**.",
             embed=embed
         )
     except discord.Forbidden:
-        await log_channel.send(f"📪 Impossible d’envoyer un MP à {membre.mention} (MP désactivés ou bloqué).")
-
-    # Unmute après délai
-    await asyncio.sleep(mute_duration)
-
-    try:
-        # On vérifie que le membre est encore dans le serveur
-        updated_member = await interaction.guild.fetch_member(membre.id)
-        mute_role = discord.utils.get(interaction.guild.roles, name="Muted")
-
-        if mute_role in updated_member.roles:
-            await updated_member.remove_roles(mute_role, reason="Fin du mute automatique")
-            await log_channel.send(f"🔊 {updated_member.mention} a été automatiquement unmute.")
-    except discord.NotFound:
-        print(f"{membre} a quitté le serveur avant la fin du mute.")
-    except Exception as e:
-        print(f"Erreur lors du unmute : {e}")
+        if log_channel:
+            await log_channel.send(f"📪 MP à {membre.mention} impossible (fermé ou bloqué).")
 
 
 # UNMUTE
