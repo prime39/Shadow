@@ -489,22 +489,43 @@ async def mute(interaction: discord.Interaction, membre: discord.Member, duree: 
 
 
 # UNMUTE
-@bot.tree.command(name="unmute", description="Retire le mute d'un membre", guild=discord.Object(id=GUILD_ID))
+@bot.tree.command(name="unmute", description="Retire le mute d'un membre (timeout natif)", guild=discord.Object(id=GUILD_ID))
 @is_modo()
 @app_commands.describe(membre="Le membre à unmute")
 async def unmute(interaction: discord.Interaction, membre: discord.Member):
-    mute_role = discord.utils.get(interaction.guild.roles, name="Muted")
-    if mute_role in membre.roles:
-        await membre.remove_roles(mute_role)
-        await interaction.response.send_message(f"{membre.mention} a été unmute.", ephemeral=True)
 
-        log_channel = bot.get_channel(SANCTION_LOG_ID)
-        embed = discord.Embed(title="🔊 Unmute", color=discord.Color.green(), timestamp=datetime.utcnow())
-        embed.add_field(name="Modérateur", value=interaction.user.mention)
-        embed.add_field(name="Membre", value=membre.mention)
-        await log_channel.send(embed=embed)
-    else:
-        await interaction.response.send_message("Ce membre n'est pas mute.", ephemeral=True)
+    if membre.timed_out_until is None:
+        await interaction.response.send_message(f"ℹ️ {membre.mention} n'est pas mute actuellement.", ephemeral=True)
+        return
+
+    try:
+        await membre.timeout(until=None, reason=f"Unmute par {interaction.user}")
+    except discord.Forbidden:
+        await interaction.response.send_message("❌ Je n'ai pas la permission de unmute ce membre.", ephemeral=True)
+        return
+    except Exception as e:
+        await interaction.response.send_message(f"❌ Une erreur est survenue : {e}", ephemeral=True)
+        return
+
+    await interaction.response.send_message(f"✅ {membre.mention} a été unmute.", ephemeral=True
+
+    # Embed pour log
+    embed = discord.Embed(title="🔈 Unmute (timeout retiré)", color=discord.Color.green(), timestamp=datetime.utcnow())
+    embed.add_field(name="Modérateur", value=interaction.user.mention)
+    embed.add_field(name="Membre", value=membre.mention)
+
+    # Log dans le salon
+    log_channel = bot.get_channel(SANCTION_LOG_ID)
+    await log_channel.send(embed=embed)
+
+    # MP au membre
+    try:
+        await membre.send(
+            content=f"✅ Tu as été **unmute** sur **{interaction.guild.name}**.",
+            embed=embed
+        )
+    except discord.Forbidden:
+        await log_channel.send(f"📪 Impossible d’envoyer un MP à {membre.mention} (MP désactivés ou bloqué).")
 
 # CLEAR
 @bot.tree.command(name="clear", description="Supprime des messages", guild=discord.Object(id=GUILD_ID))
