@@ -24,6 +24,9 @@ import platform
 token = os.environ['SHADOW']
 intents = discord.Intents.default()
 intents.message_content = True
+intents.members = True
+intents.guilds = True
+intents.moderation = True  # <- Pour certains wrappers ou futures versions
 start_time = time.time()
 client = discord.Client(intents=intents)
 bot = commands.Bot(command_prefix="-", intents=intents, help_command=None)
