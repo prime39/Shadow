@@ -429,59 +429,47 @@ async def on_ready():
     print(f"✅ Bot connecté : {bot.user}")
 
 # MUTE
-@bot.tree.command(name="mute", description="Mute un membre pour une durée donnée (ex: 1h, 30m, 15s)", guild=discord.Object(id=GUILD_ID))
-@commands.has_role(ROLE_MOD_ID)
-@app_commands.describe(membre="Le membre à mute", duree="Durée en heures, minutes ou secondes", raison="Raison du mute")
-async def mute(interaction: discord.Interaction, membre: discord.Member, duree: str, raison: str = "Aucune raison"):
+@bot.tree.command(name="mute", description="Mute un membre via le système natif Discord", guild=discord.Object(id=GUILD_ID))
+@is_modo()
+@app_commands.describe(membre="Le membre à mute", duree="Durée en heures", raison="Raison du mute")
+async def mute(interaction: discord.Interaction, membre: discord.Member, duree: float, raison: str = "Aucune raison"):
 
-    # Vérification des permissions de rôle
     if membre.top_role >= interaction.user.top_role:
-        await interaction.response.send_message("⛔ Tu ne peux pas mute un membre avec un rôle égal ou supérieur au tien.", ephemeral=True)
+        await interaction.response.send_message("⛔ Tu ne peux pas mute ce membre (rôle trop élevé).", ephemeral=True)
         return
 
-    # Conversion de la durée
-    try:
-        mute_duration = parse_duration(duree)
-        if mute_duration <= 0:
-            await interaction.response.send_message("❌ La durée spécifiée n'est pas valide. Utilise des formats comme '1h', '30m', ou '15s'.", ephemeral=True)
-            return
-    except ValueError:
-        await interaction.response.send_message("❌ Format de durée incorrect. Exemple : '1h', '30m', ou '15s'.", ephemeral=True)
-        return
-
-    mute_role = discord.utils.get(interaction.guild.roles, name="Muted")
-
-    if not mute_role:
-        try:
-            mute_role = await interaction.guild.create_role(name="Muted", reason="Création du rôle Muted")
-            for channel in interaction.guild.channels:
-                await channel.set_permissions(mute_role, send_messages=False, speak=False, add_reactions=False)
-        except discord.Forbidden:
-            await interaction.response.send_message("❌ Je n'ai pas les permissions pour créer le rôle Muted.", ephemeral=True)
-            return
+    # Calcul de l'heure de fin
+    fin_timeout = datetime.utcnow() + timedelta(hours=duree)
 
     try:
-        await membre.add_roles(mute_role, reason=raison)
+        await membre.timeout(until=fin_timeout, reason=raison)
     except discord.Forbidden:
-        await interaction.response.send_message("❌ Je n'ai pas pu ajouter le rôle Muted à ce membre.", ephemeral=True)
+        await interaction.response.send_message("❌ Je n'ai pas la permission de mute ce membre.", ephemeral=True)
+        return
+    except Exception as e:
+        await interaction.response.send_message(f"❌ Une erreur est survenue : {e}", ephemeral=True)
         return
 
-    await interaction.response.send_message(f"✅ {membre.mention} a été mute pour {duree}.", ephemeral=True)
+    await interaction.response.send_message(f"✅ {membre.mention} a été mute pendant {duree}h.", ephemeral=True)
 
-    # Logs
-    log_channel = bot.get_channel(SANCTION_LOG_ID)
-    embed = discord.Embed(title="🔇 Mute", color=discord.Color.orange(), timestamp=datetime.utcnow())
+    # Création de l'embed
+    embed = discord.Embed(title="🔇 Mute (timeout)", color=discord.Color.orange(), timestamp=datetime.utcnow())
     embed.add_field(name="Modérateur", value=interaction.user.mention)
-    embed.add_field(name="Membre", value=membre.mention)
-    embed.add_field(name="Durée", value=duree)
+    embed.add_field(name="Durée", value=f"{duree} heure(s)")
     embed.add_field(name="Raison", value=raison, inline=False)
+
+    # Log dans le salon
+    log_channel = bot.get_channel(SANCTION_LOG_ID)
     await log_channel.send(embed=embed)
 
-     # Envoi en MP au membre
+    # MP au membre sanctionné
     try:
-        await membre.send(embed=embed)
+        await membre.send(
+            content=f"⚠️ Tu as été **mute (timeout)** sur **{interaction.guild.name}**.",
+            embed=embed
+        )
     except discord.Forbidden:
-        await log_channel.send(f"⚠️ Impossible d’envoyer un MP à {membre.mention} (MP fermés ou bloqué).")
+        await log_channel.send(f"📪 Impossible d’envoyer un MP à {membre.mention} (MP désactivés ou bloqué).")
 
     # Unmute après délai
     await asyncio.sleep(mute_duration)
