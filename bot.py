@@ -396,10 +396,10 @@ async def ban(interaction: discord.Interaction, membre: discord.Member, raison: 
     embed.add_field(name="Membre banni", value=membre.mention)
     embed.add_field(name="Raison", value=raison, inline=False)
     await log_channel.send(embed=embed)
-try:
-    await membre.send(embed=embed)
-except discord.Forbidden:
-    await log_channel.send(f"⚠️ Impossible d’envoyer un MP à {membre.mention}")
+    try:
+        await membre.send(embed=embed)
+    except discord.Forbidden:
+        await log_channel.send(f"⚠️ Impossible d’envoyer un MP à {membre.mention}")
 
 
 # MUTE
