@@ -436,7 +436,7 @@ async def on_ready():
 @app_commands.describe(membre="Le membre à mute", duree="Durée en heures", raison="Raison du mute")
 async def mute(interaction: discord.Interaction, membre: discord.Member, duree: float, raison: str = "Aucune raison"):
 
-    await interaction.response.defer(ephemeral=True)  # Pour éviter le timeout de la commande
+    await interaction.response.send_message(f"✅ {membre.mention} a été mute pour {duree}h.", ephemeral=True)
 
     if interaction.user.top_role <= membre.top_role and interaction.user != interaction.guild.owner:
         await interaction.followup.send("⛔ Tu ne peux pas mute ce membre (rôle trop élevé).", ephemeral=True)
