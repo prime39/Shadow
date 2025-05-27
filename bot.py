@@ -542,7 +542,7 @@ async def spatiale(ctx):
     # Vérifie si l'utilisateur a le rôle requis
     required_role = get(ctx.author.roles, id=REQUIRED_ROLE_ID)
     if not required_role:
-        await ctx.send("")
+        await ctx.send(".")
         return
 
     # Vérifie le cooldown
