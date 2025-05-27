@@ -566,13 +566,13 @@ embed = discord.Embed(
         description=f"**{ctx.author.mention}** a utilisé la magie spatiale !",
         color=discord.Color.purple()
     )
-    embed.set_thumbnail(url="https://cdn.discordapp.com/icons/946034497219100723/a_36e3d58b12440661dc1702acdc7f34a4.gif?size=1024")
-    embed.set_image(url="https://static.wikia.nocookie.net/jujutsu-kaisen/images/5/50/Vide_Incommensurable_EP7.png/revision/latest?cb=20210406195921&path-prefix=fr")
-    embed.set_footer(
-        text="Shadow Garden",
-        icon_url="https://cdn.discordapp.com/icons/946034497219100723/65e3c9c08a1386ef3c4709a72bc56c5b.webp?size=1024&format=webp"
-    )
-    await ctx.send(embed=embed)
+        embed.set_thumbnail(url="https://cdn.discordapp.com/icons/946034497219100723/a_36e3d58b12440661dc1702acdc7f34a4.gif?size=1024")
+        embed.set_image(url="https://static.wikia.nocookie.net/jujutsu-kaisen/images/5/50/Vide_Incommensurable_EP7.png/revision/latest?cb=20210406195921&path-prefix=fr")
+        embed.set_footer(
+            text="Shadow Garden",
+            icon_url="https://cdn.discordapp.com/icons/946034497219100723/65e3c9c08a1386ef3c4709a72bc56c5b.webp?size=1024&format=webp"
+        )
+        await ctx.send(embed=embed)
 
     # Ajoute un cooldown de 24h
     cooldowns[user_id] = datetime.now() + timedelta(hours=24)
