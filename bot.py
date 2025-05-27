@@ -18,7 +18,7 @@ from discord.ui import Modal, TextInput
 from discord.ext import tasks
 from collections import defaultdict
 from collections import deque
-from datetime import datetime
+from datetime import datetime, timedelta
 import psutil
 import platform
 
