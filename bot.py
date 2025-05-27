@@ -561,7 +561,7 @@ async def spatiale(ctx):
     await ctx.author.add_roles(role)
 
     # Embed de confirmation
-     embed = discord.Embed(
+embed = discord.Embed(
         title="Une magie spatiale vient d'être declenché !",
         description=f"**{ctx.author.mention}** a utilisé la magie spatiale !",
         color=discord.Color.purple()
