@@ -565,6 +565,7 @@ embed = discord.Embed(
         title="Une magie spatiale vient d'être declenché !",
         description=f"**{ctx.author.mention}** a utilisé la magie spatiale !",
         color=discord.Color.purple()
+    )
     embed.set_thumbnail(url="https://cdn.discordapp.com/icons/946034497219100723/65e3c9c08a1386ef3c4709a72bc56c5b.webp?size=1024&format=webp")
     embed.set_image(url="https://static.wikia.nocookie.net/jujutsu-kaisen/images/5/50/Vide_Incommensurable_EP7.png/revision/latest?cb=20210406195921&path-prefix=fr")
     embed.set_footer(
