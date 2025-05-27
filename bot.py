@@ -528,6 +528,63 @@ async def clear(interaction: discord.Interaction, nombre: int):
     await interaction.channel.purge(limit=nombre)
     await interaction.response.send_message(f"🧹 {nombre} messages supprimés.", ephemeral=True)
 
+# Dictionnaire pour stocker les cooldowns
+cooldowns = {}
+
+# Identifiants à modifier
+TEMP_ROLE_ID = 1376995853503561809  # ID du rôle temporaire à donner
+REQUIRED_ROLE_ID = 1376621424118071427  # ID du rôle requis pour utiliser la commande
+
+@bot.command()
+async def spatiale(ctx):
+    user_id = ctx.author.id
+
+    # Vérifie si l'utilisateur a le rôle requis
+    required_role = get(ctx.author.roles, id=REQUIRED_ROLE_ID)
+    if not required_role:
+        await ctx.send("")
+        return
+
+    # Vérifie le cooldown
+    if user_id in cooldowns and datetime.now() < cooldowns[user_id]:
+        delta = cooldowns[user_id] - datetime.now()
+        hours, remainder = divmod(int(delta.total_seconds()), 3600)
+        minutes, _ = divmod(remainder, 60)
+        await ctx.send(f"⏳ Tu dois attendre encore {hours}h{minutes}min avant de réutiliser cette commande.")
+        return
+
+    role = ctx.guild.get_role(TEMP_ROLE_ID)
+    if not role:
+        await ctx.send("❌ Le rôle temporaire n'existe pas.")
+        return
+
+    await ctx.author.add_roles(role)
+
+    # Embed de confirmation
+     embed = discord.Embed(
+        title="Une magie spatiale vient d'être declenché !",
+        description=f"**{ctx.author.mention}** a utilisé la magie spatiale !",
+        color=discord.Color.purple()
+    )
+    embed.set_thumbnail(url="https://cdn.discordapp.com/icons/946034497219100723/65e3c9c08a1386ef3c4709a72bc56c5b.webp?size=1024&format=webp")
+    embed.set_image(url="https://static.wikia.nocookie.net/jujutsu-kaisen/images/5/50/Vide_Incommensurable_EP7.png/revision/latest?cb=20210406195921&path-prefix=fr")
+    embed.set_footer(
+        text="Shadow Garden",
+        icon_url="https://cdn.discordapp.com/icons/946034497219100723/65e3c9c08a1386ef3c4709a72bc56c5b.webp?size=1024&format=webp"
+    )
+    await ctx.send(embed=embed)
+
+    # Ajoute un cooldown de 24h
+    cooldowns[user_id] = datetime.now() + timedelta(hours=24)
+
+    # Attend 15 minutes puis retire le rôle
+    await asyncio.sleep(900)  # 15 minutes = 900 secondes
+    await ctx.author.remove_roles(role)
+    try:
+        await ctx.author.send(f"🔔 Ton rôle temporaire **{role.name}** a été retiré.")
+    except discord.Forbidden:
+        pass  # L'utilisateur a désactivé les MP
+
 # Token pour démarrer le bot (à partir des secrets)
 # Lancer le bot avec ton token depuis l'environnement  
 keep_alive()
